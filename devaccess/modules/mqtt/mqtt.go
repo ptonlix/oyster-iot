@@ -2,9 +2,9 @@ package mqtt
 
 import (
 	"errors"
-	"fmt"
 	"os"
 
+	"github.com/beego/beego/v2/core/logs"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/spf13/viper"
 )
@@ -16,10 +16,10 @@ func Listen(broker, username, password, clientid string, msgProc func(m mqtt.Mes
 	running = false
 	if _client == nil {
 		var connectLostHandler mqtt.ConnectionLostHandler = func(client mqtt.Client, err error) {
-			fmt.Printf("Connect lost: %v", err)
+			logs.Error("Connect lost: %v", err)
 		}
 		opts := mqtt.NewClientOptions()
-		fmt.Println(broker + username + password + clientid)
+		logs.Info("%s %s %s %s ", broker, username, password, clientid)
 		opts.SetUsername(username)
 		opts.SetPassword(password)
 		opts.SetClientID(clientid)
@@ -28,7 +28,7 @@ func Listen(broker, username, password, clientid string, msgProc func(m mqtt.Mes
 		opts.OnConnectionLost = connectLostHandler
 		opts.SetOnConnectHandler(func(c mqtt.Client) {
 			if !running {
-				fmt.Println("MQTT CONNECT SUCCESS -- ", broker)
+				logs.Info("MQTT CONNECT SUCCESS -- ", broker)
 			}
 			running = true
 		})
@@ -41,7 +41,7 @@ func Listen(broker, username, password, clientid string, msgProc func(m mqtt.Mes
 		}
 		if token := _client.Subscribe(viper.GetString("mqtt.topicToSubscribe"), 0, nil); token.Wait() &&
 			token.Error() != nil {
-			fmt.Println(token.Error())
+			logs.Error(token.Error())
 			os.Exit(1)
 		}
 	}
@@ -56,7 +56,7 @@ func Send(payload []byte) (err error) {
 	}
 	token := _client.Publish(viper.GetString("mqtt.topicToPublish"), 1, false, string(payload))
 	if token.Error() != nil {
-		fmt.Println(token.Error())
+		logs.Error(token.Error())
 	}
 	return token.Error()
 }

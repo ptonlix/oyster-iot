@@ -26,6 +26,11 @@ func init() {
 		web.NSRouter("/auth/refresh", &controllers.AuthController{}, "*:Refresh"),
 		// web.NSRouter("/auth/me", &controllers.AuthController{}, "*:Me"),
 		// web.NSRouter("/auth/register", &controllers.AuthController{}, "*:Register"),
+
+		web.NSRouter("/device/edit", &controllers.DeviceController{}, "*:Edit"),
+		web.NSRouter("/device/add", &controllers.DeviceController{}, "*:Add"),
+		web.NSRouter("/device/delete", &controllers.DeviceController{}, "*:Delete"),
+		web.NSRouter("/device/list", &controllers.DeviceController{}, "*:List"),
 	)
 	web.AddNamespace(api)
 }

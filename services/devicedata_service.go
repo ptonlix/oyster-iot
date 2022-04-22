@@ -1,9 +1,10 @@
 package services
 
 import (
-	"log"
 	"oyster-iot/init/mysql"
 	"oyster-iot/models"
+
+	"github.com/beego/beego/v2/core/logs"
 )
 
 type DeviceData struct {
@@ -19,9 +20,9 @@ func (*DeviceData) Insert(device *models.Device, msg string) error {
 
 	id, err := mysql.Mydb.Insert(&deviceData)
 	if err != nil {
-		log.Println("Device Data insert Failed!", err.Error())
+		logs.Warn("Device Data insert Failed!", err.Error())
 		return err
 	}
-	log.Println("Device Data insert Success! id:", id)
+	logs.Info("Device Data insert Success! id:", id)
 	return nil
 }

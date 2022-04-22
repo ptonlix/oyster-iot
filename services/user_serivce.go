@@ -1,11 +1,11 @@
 package services
 
 import (
-	"log"
 	"oyster-iot/init/mysql"
 	"oyster-iot/models"
 
 	"github.com/beego/beego/v2/client/orm"
+	"github.com/beego/beego/v2/core/logs"
 )
 
 type UserService struct {
@@ -18,9 +18,9 @@ func (*UserService) GetUserByUsername(username string) (*models.Users, error) {
 	err := mysql.Mydb.Read(&user, "Username")
 
 	if err == orm.ErrNoRows {
-		log.Printf("Username %s: Cannot find user!\n", username)
+		logs.Warn("Username %s: Cannot find user!\n", username)
 	} else if err != nil {
-		log.Println(err)
+		logs.Warn(err)
 	}
 
 	return &user, err
@@ -33,9 +33,9 @@ func (*UserService) GetUserById(id int) (*models.Users, error) {
 	err := mysql.Mydb.Read(&user)
 
 	if err == orm.ErrNoRows {
-		log.Printf("User Id %d: Cannot find user!\n", id)
+		logs.Warn("User Id %d: Cannot find user!\n", id)
 	} else if err != nil {
-		log.Println(err)
+		logs.Warn(err)
 	}
 
 	return &user, err

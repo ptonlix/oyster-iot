@@ -3,7 +3,6 @@ package controllers
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"oyster-iot/init/cache"
 	"oyster-iot/services"
 	"time"
@@ -13,6 +12,7 @@ import (
 
 	djwt "github.com/dgrijalva/jwt-go"
 
+	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/core/validation"
 )
 
@@ -21,7 +21,6 @@ type AuthController struct {
 }
 
 type TokenData struct {
-	Msg       string `json:"msg"`
 	Token     string `json:"token"`
 	TokenType string `json:"token_type"`
 	Expires   int    `json:"expires"`
@@ -43,13 +42,12 @@ func (u *LoginInfo) Valid(v *validation.Validation) {
 }
 
 // 登录
-func (this *AuthController) Login() {
-	log.Println(this.Ctx.Input.RequestBody)
+func (u *AuthController) Login() {
 	loginInfo := LoginInfo{}
-	err := json.Unmarshal(this.Ctx.Input.RequestBody, &loginInfo)
+	err := json.Unmarshal(u.Ctx.Input.RequestBody, &loginInfo)
 	if err != nil {
-		log.Println("Json Unmarshal Failed!", err.Error())
-		this.Response(500, "系统内部错误")
+		logs.Warn("Json Unmarshal Failed!", err.Error())
+		u.Response(500, "系统内部错误")
 		return
 	}
 	// 校验输入参数是否合法
@@ -57,15 +55,15 @@ func (this *AuthController) Login() {
 	b, err := v.Valid(&loginInfo)
 	if err != nil {
 		// handler error
-		this.Response(500, "系统内部错误")
+		u.Response(500, "系统内部错误")
 		return
 	}
 	if !b {
 		// validation does not pass
 		for _, err := range v.Errors {
-			log.Println(err.Key, err.Message)
+			logs.Warn(err.Key, err.Message)
 		}
-		this.Response(400, "输入参数错误")
+		u.Response(400, "输入参数错误")
 		return
 	}
 	//检查用户名或者密码
@@ -73,7 +71,7 @@ func (this *AuthController) Login() {
 	var UserService services.UserService
 	user, err := UserService.GetUserByUsername(loginInfo.Username)
 	if err != nil || !bcrypt.ComparePasswords(user.Password, []byte(loginInfo.Password)) {
-		this.Response(400, "用户名或密码错误")
+		u.Response(400, "用户名或密码错误")
 		return
 	}
 
@@ -89,11 +87,10 @@ func (this *AuthController) Login() {
 	token, err := jwt.MakeCliamsToken(&tokenCliams)
 	if err != nil {
 		// jwt失败
-		this.Response(400, "JWT失败")
+		u.Response(500, "JWT失败")
 		return
 	}
 	d := TokenData{
-		Msg:       "登录成功",
 		Token:     token,
 		TokenType: "oyster",
 		Expires:   3600,
@@ -102,33 +99,33 @@ func (this *AuthController) Login() {
 	//将Token写入缓存
 	cache.Bm.Put(context.TODO(), token, 1, 3000*time.Second)
 	// 登录成功
-	this.Response(200, d)
+	u.Response(200, "登录成功", d)
 }
 
 // 退出登录
-func (this *AuthController) Logout() {
-	authorization := this.Ctx.Request.Header["Authorization"][0]
+func (u *AuthController) Logout() {
+	authorization := u.Ctx.Request.Header["Authorization"][0]
 	userToken := authorization[len(jwt.JWTType)+1:]
 	_, err := jwt.ParseCliamsToken(userToken)
 	if err != nil {
-		this.Response(400, "token异常")
+		u.Response(400, "token异常", nil)
 		return
 	}
 	s, err := cache.Bm.IsExist(context.TODO(), userToken)
 	if s {
 		cache.Bm.Delete(context.TODO(), userToken)
 	}
-	this.Response(200, "退出成功")
+	u.Response(200, "退出成功")
 	return
 }
 
 // 刷新token
-func (this *AuthController) Refresh() {
-	authorization := this.Ctx.Request.Header["Authorization"][0]
+func (u *AuthController) Refresh() {
+	authorization := u.Ctx.Request.Header["Authorization"][0]
 	userToken := authorization[len(jwt.JWTType)+1:]
-	user, err := jwt.ParseCliamsToken(userToken)
+	userInfo, err := jwt.ParseCliamsToken(userToken)
 	if err != nil {
-		this.Response(400, "token异常")
+		u.Response(400, "token异常")
 		return
 	}
 	s, _ := cache.Bm.IsExist(context.TODO(), userToken)
@@ -136,15 +133,15 @@ func (this *AuthController) Refresh() {
 		cache.Bm.Delete(context.TODO(), userToken)
 	}
 	var UserService services.UserService
-	u, err := UserService.GetUserById(user.Id)
+	user, err := UserService.GetUserById(userInfo.Id)
 	if err != nil {
-		this.Response(400, "该账户不存在")
+		u.Response(500, "该账户不存在")
 		return
 	}
 	// 生成jwt
 	tokenCliams := jwt.UserClaims{
-		Id:         u.Id,
-		Username:   u.Username,
+		Id:         user.Id,
+		Username:   user.Username,
 		CreateTime: time.Now(),
 		StandardClaims: djwt.StandardClaims{
 			ExpiresAt: time.Now().Unix() + 3600,
@@ -153,12 +150,11 @@ func (this *AuthController) Refresh() {
 	token, err := jwt.MakeCliamsToken(&tokenCliams)
 	if err != nil {
 		// JWT失败
-		this.Response(400, "JWT失败")
+		u.Response(500, "JWT失败")
 		return
 	}
 
 	d := TokenData{
-		Msg:       "Token刷新成功",
 		Token:     token,
 		TokenType: jwt.JWTType,
 		Expires:   3600,
@@ -167,5 +163,5 @@ func (this *AuthController) Refresh() {
 	//将Token写入缓存
 	cache.Bm.Put(context.TODO(), token, 1, 3000*time.Second)
 	// 登录成功
-	this.Response(200, d)
+	u.Response(200, "Token刷新成功", d)
 }

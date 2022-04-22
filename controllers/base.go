@@ -8,12 +8,19 @@ type BaseController struct {
 	beego.Controller
 }
 
-func (c *BaseController) Response(code int, msg interface{}) {
+type PageParam struct {
+	Pagesize int `json:"pagesize" valid:"Max(255)"`
+	Pagenum  int `json:"pagenum" valid:"Max(255)"`
+}
+
+func (c *BaseController) Response(code int, msg string, data ...interface{}) {
 	type JSONStruct struct {
 		Code int         `json:"code"`
+		Msg  string      `json:"msg"`
 		Data interface{} `json:"data"`
 	}
-	mystruct := &JSONStruct{code, msg}
+	mystruct := &JSONStruct{code, msg, data[0]}
 	c.Data["json"] = mystruct
 	c.ServeJSON()
+
 }
