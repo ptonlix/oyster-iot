@@ -68,6 +68,7 @@ func (*DeviceService) GetDeviceByAssetsNum(assetsNum string) (*models.Device, er
 
 	if err == orm.ErrNoRows {
 		logs.Warn("AssetsNum %#v: Cannot find device!\n", assetsNum)
+		return nil, err
 	} else if err != nil {
 		logs.Warn(err)
 	}

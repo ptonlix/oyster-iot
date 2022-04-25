@@ -110,7 +110,7 @@ func (d *DeviceController) Edit() {
 	var deviceService services.DeviceService
 
 	if device, err = deviceService.GetDeviceByAssetsNum(deviceInfo.AssetsNum); err != nil {
-		d.Response(400, "查找不到该设备")
+		d.Response(500, "查找不到该设备")
 		return
 	}
 
@@ -159,7 +159,7 @@ func (d *DeviceController) Delete() {
 	var deviceService services.DeviceService
 
 	if device, err = deviceService.GetDeviceByAssetsNum(deviceInfo.AssetsNum); err != nil {
-		d.Response(400, "查找不到该设备")
+		d.Response(500, "查找不到该设备")
 		return
 	}
 

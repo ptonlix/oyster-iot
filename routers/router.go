@@ -17,7 +17,7 @@ import (
 
 func init() {
 
-	AuthMiddle()
+	//AuthMiddle()
 
 	api := web.NewNamespace("/api",
 		// 登录
@@ -27,10 +27,20 @@ func init() {
 		// web.NSRouter("/auth/me", &controllers.AuthController{}, "*:Me"),
 		// web.NSRouter("/auth/register", &controllers.AuthController{}, "*:Register"),
 
+		// 设备管理
 		web.NSRouter("/device/edit", &controllers.DeviceController{}, "*:Edit"),
 		web.NSRouter("/device/add", &controllers.DeviceController{}, "*:Add"),
 		web.NSRouter("/device/delete", &controllers.DeviceController{}, "*:Delete"),
 		web.NSRouter("/device/list", &controllers.DeviceController{}, "*:List"),
+
+		// 业务管理
+		web.NSNamespace("/business",
+			// 获取设备最近一天的温度情况
+			web.NSRouter("/temperature/devinday", &controllers.TempController{}, "*:GetTempInDay"),
+			// 获取最新的温度信息
+			web.NSRouter("/temperature/dev", &controllers.TempController{}, "*:GetTemp"),
+			web.NSRouter("/temperature/sendtempcmd", &controllers.TempController{}, "*:SendTempCmd"),
+		),
 	)
 	web.AddNamespace(api)
 }

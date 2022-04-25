@@ -13,9 +13,9 @@ type DeviceData struct {
 // 插入设备上报的数据
 func (*DeviceData) Insert(device *models.Device, msg string) error {
 	deviceData := models.DeviceData{
-		DevId:   device.Id,
-		DevType: device.Type,
-		Msg:     msg,
+		DevAssetsNum: device.AssetsNum,
+		DevType:      device.Type,
+		Msg:          msg,
 	}
 
 	id, err := mysql.Mydb.Insert(&deviceData)

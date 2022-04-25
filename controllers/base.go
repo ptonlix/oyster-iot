@@ -17,9 +17,15 @@ func (c *BaseController) Response(code int, msg string, data ...interface{}) {
 	type JSONStruct struct {
 		Code int         `json:"code"`
 		Msg  string      `json:"msg"`
-		Data interface{} `json:"data"`
+		Data interface{} `json:"data,omitempty"` //忽略空值
 	}
-	mystruct := &JSONStruct{code, msg, data[0]}
+	var mystruct *JSONStruct
+	if data != nil {
+		mystruct = &JSONStruct{code, msg, data[0]}
+	} else {
+		mystruct = &JSONStruct{code, msg, nil}
+	}
+
 	c.Data["json"] = mystruct
 	c.ServeJSON()
 
