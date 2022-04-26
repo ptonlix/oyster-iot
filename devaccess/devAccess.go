@@ -6,6 +6,7 @@ import (
 	devmq "oyster-iot/devaccess/modules/mqtt"
 	"oyster-iot/services"
 
+	"github.com/beego/beego/v2/core/logs"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/spf13/viper"
 )
@@ -16,7 +17,7 @@ func init() {
 }
 
 func loadConfig() {
-	log.Println("read devaccess config")
+	logs.Info("read devaccess config")
 	envConfigFile := flag.String("config", "./devaccess/config.ini", "The path of device access layer config file")
 	flag.Parse()
 	viper.SetConfigFile(*envConfigFile)
@@ -24,10 +25,10 @@ func loadConfig() {
 		log.Println("FAILURE", err)
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			// 配置文件未找到错误；如果需要可以忽略
-			log.Println("devaccess config Not Found!")
+			logs.Warn("devaccess config Not Found!")
 		} else {
 			// 配置文件被找到，但产生了另外的错误
-			log.Println("devaccess config Found, but ERROR !")
+			logs.Error("devaccess config Found, but ERROR !")
 		}
 	}
 }
