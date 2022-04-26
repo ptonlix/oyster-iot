@@ -38,7 +38,7 @@ func (*DeviceService) Add(device *models.Device) error {
 	return err
 }
 
-// 添加设备
+// 修改设备
 func (*DeviceService) Update(device *models.Device) error {
 
 	id, err := mysql.Mydb.Update(device)
@@ -91,4 +91,75 @@ func (*DeviceService) GetDevicesByPage(pageSize, pageNum int) ([]*models.Device,
 	logs.Info("Get Devices successful! Returned Rows Num: %#v", num)
 
 	return devices, err
+}
+
+// 通过业务ID获取设备
+func (*DeviceService) GetDeviceByBusiness(businessId int) ([]*models.Device, error) {
+	var devices []*models.Device
+	qs := mysql.Mydb.QueryTable(&models.Device{})
+
+	num, err := qs.Filter("business_id", businessId).All(&devices)
+	if err == orm.ErrNoRows {
+		logs.Warn("businessId %#v: Cannot find device!\n", businessId)
+		return nil, err
+	} else if err != nil {
+		logs.Warn(err)
+	}
+	logs.Info("Get Devices successful! Returned Rows Num: %#v", num)
+	return devices, err
+}
+
+// 通过未绑定业务的设备列表
+func (*DeviceService) GetDeviceByNilBusiness() ([]*models.Device, error) {
+	var devices []*models.Device
+	qs := mysql.Mydb.QueryTable(&models.Device{})
+
+	num, err := qs.Filter("business_id", 0).All(&devices)
+	if err != nil {
+		logs.Warn(err)
+	}
+	logs.Info("Get Devices successful! Returned Rows Num: %#v", num)
+	return devices, err
+}
+
+// 修改设备关联的业务ID
+func (*DeviceService) UpdateForBusiness(assertsNum []string, businessId int) (err error) {
+	// 开启事务
+	to, err := mysql.Mydb.Begin()
+	if err != nil {
+		logs.Error("start the transaction failed")
+		return
+
+	}
+
+	defer func() {
+		if err != nil {
+			err = to.Rollback()
+			if err != nil {
+				logs.Error("roll back transaction failed", err)
+			}
+		} else {
+			err = to.Commit()
+			if err != nil {
+				logs.Error("commit transaction failed.", err)
+			}
+		}
+	}()
+
+	for _, v := range assertsNum {
+		device := models.Device{AssetsNum: v}
+		err = to.Read(&device, "AssetsNum")
+		if err != nil {
+			logs.Error("execute transaction's select sql fail, rollback.", err)
+			return
+		}
+		// 更新业务字段
+		device.BusinessId = businessId
+		_, err = to.Update(&device, "BusinessId")
+		if err != nil {
+			logs.Error("execute transaction's update sql fail, rollback.", err)
+			return
+		}
+	}
+	return nil
 }

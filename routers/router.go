@@ -32,9 +32,16 @@ func init() {
 		web.NSRouter("/device/add", &controllers.DeviceController{}, "*:Add"),
 		web.NSRouter("/device/delete", &controllers.DeviceController{}, "*:Delete"),
 		web.NSRouter("/device/list", &controllers.DeviceController{}, "*:List"),
+		web.NSRouter("/device/listforbusiness", &controllers.DeviceController{}, "*:ListForBusiness"),
+		web.NSRouter("/device/listfornilbusiness", &controllers.DeviceController{}, "*:ListForNilBusiness"),
+		web.NSRouter("/device/updateforbusiness", &controllers.DeviceController{}, "*:UpdateForBusiness"),
 
 		// 业务管理
 		web.NSNamespace("/business",
+			web.NSRouter("/add", &controllers.BusinessController{}, "*:Add"),
+			web.NSRouter("/edit", &controllers.BusinessController{}, "*:Edit"),
+			web.NSRouter("/delete", &controllers.BusinessController{}, "*:Delete"),
+			web.NSRouter("/list", &controllers.BusinessController{}, "*:List"),
 			// 获取设备最近一天的温度情况
 			web.NSRouter("/temperature/devinday", &controllers.TempController{}, "*:GetTempInDay"),
 			// 获取最新的温度信息
