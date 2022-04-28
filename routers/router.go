@@ -48,6 +48,11 @@ func init() {
 			web.NSRouter("/temperature/dev", &controllers.TempController{}, "*:GetTemp"),
 			web.NSRouter("/temperature/sendtempcmd", &controllers.TempController{}, "*:SendTempCmd"),
 		),
+
+		// 系统信息
+		web.NSNamespace("sys/",
+			web.NSRouter("/emqmetrisc", &controllers.EmqExportController{}, "*:GetMetrics"),
+		),
 	)
 	web.AddNamespace(api)
 }
