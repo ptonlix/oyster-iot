@@ -66,6 +66,7 @@ func (b *BusinessController) Add() {
 func (b *BusinessController) Edit() {
 	businessInfo := BusinessInfo{}
 	err := json.Unmarshal(b.Ctx.Input.RequestBody, &businessInfo)
+	logs.Warn(businessInfo)
 	if err != nil {
 		logs.Warn("Json Unmarshal Failed!", err.Error())
 		b.Response(500, "系统内部错误")

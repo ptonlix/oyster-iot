@@ -35,6 +35,7 @@ func init() {
 		web.NSRouter("/device/listforbusiness", &controllers.DeviceController{}, "*:ListForBusiness"),
 		web.NSRouter("/device/listfornilbusiness", &controllers.DeviceController{}, "*:ListForNilBusiness"),
 		web.NSRouter("/device/updateforbusiness", &controllers.DeviceController{}, "*:UpdateForBusiness"),
+		web.NSRouter("/device/listforindex", &controllers.DeviceController{}, "*:ListForIndex"),
 
 		// 业务管理
 		web.NSNamespace("/business",
@@ -47,6 +48,11 @@ func init() {
 			// 获取最新的温度信息
 			web.NSRouter("/temperature/dev", &controllers.TempController{}, "*:GetTemp"),
 			web.NSRouter("/temperature/sendtempcmd", &controllers.TempController{}, "*:SendTempCmd"),
+		),
+
+		// 系统信息
+		web.NSNamespace("sys/",
+			web.NSRouter("/emqmetrisc", &controllers.EmqExportController{}, "*:GetMetrics"),
 		),
 	)
 	web.AddNamespace(api)
