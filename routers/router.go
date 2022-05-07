@@ -35,6 +35,7 @@ func init() {
 		web.NSRouter("/device/listforbusiness", &controllers.DeviceController{}, "*:ListForBusiness"),
 		web.NSRouter("/device/listfornilbusiness", &controllers.DeviceController{}, "*:ListForNilBusiness"),
 		web.NSRouter("/device/updateforbusiness", &controllers.DeviceController{}, "*:UpdateForBusiness"),
+		web.NSRouter("/device/listforindex", &controllers.DeviceController{}, "*:ListForIndex"),
 
 		// 业务管理
 		web.NSNamespace("/business",

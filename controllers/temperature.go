@@ -18,6 +18,10 @@ type DevAssetsInfo struct {
 	AssetsNum  string `json:"assets_num" valid:"MaxSize(255)"`
 	DeviceType string `json:"dev_type" valid:"MaxSize(64)"`
 }
+type SomeDevAssets struct {
+	AssetsNum  []string `json:"assets_nums" valid:"MaxSize(255)"`
+	DeviceType string   `json:"dev_type" valid:"MaxSize(64)"`
+}
 
 func (t *TempController) validAssetsInfo() (device *models.Device, err error) {
 	assetsInfo := DevAssetsInfo{}
@@ -55,10 +59,9 @@ func (t *TempController) validAssetsInfo() (device *models.Device, err error) {
 	// 比较设备类型是否一致
 	if device.Type != assetsInfo.DeviceType {
 		t.Response(400, "设备类型不正确")
-		err = errors.New("DevTypError")
+		err = errors.New("DevTypeError")
 		return
 	}
-
 	return
 }
 
@@ -94,24 +97,44 @@ func (t *TempController) GetTemp() {
 	}
 
 	// 数据转换展示给前端
-	t.Response(500, "获取温度数据成功", tempData)
+	t.Response(200, "获取温度数据成功", tempData)
 }
 
 // 获取近24小时的设备的温度信息
 func (t *TempController) GetTempInDay() {
-	device, err := t.validAssetsInfo()
+	assetsInfo := SomeDevAssets{}
+	err := json.Unmarshal(t.Ctx.Input.RequestBody, &assetsInfo)
 	if err != nil {
+		logs.Warn("Json Unmarshal Failed!", err.Error())
+		t.Response(500, "系统内部错误")
+		return
+	}
+	// 校验输入参数是否合法
+	v := validation.Validation{}
+	b, err := v.Valid(&assetsInfo)
+	if err != nil {
+		// handler error
+		t.Response(500, "系统内部错误")
+		return
+	}
+	if !b {
+		// validation does not pass
+		for _, err := range v.Errors {
+			logs.Warn(err.Key, err.Message)
+		}
+		t.Response(400, "输入参数错误")
 		return
 	}
 
 	// 获取设备数据信息
 	var tempService services.TempService
-	tempData, err := tempService.GetTempInDay(device.AssetsNum)
+	tempData, err := tempService.GetTempInDay(assetsInfo.AssetsNum)
 	if err != nil {
+		logs.Warn(err.Error())
 		t.Response(500, "获取温度数据失败")
 		return
 	}
 
 	// 数据转换展示给前端
-	t.Response(500, "获取温度数据成功", tempData)
+	t.Response(200, "获取温度数据成功", tempData)
 }

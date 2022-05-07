@@ -30,7 +30,7 @@ type DeviceOfBusiness struct {
 }
 
 type DevUpBusiness struct {
-	BusinessId int      `json:"business_id" valid:"Required"`
+	BusinessId int      `json:"business_id" valid:"Min(0)"`
 	AssetsNum  []string `json:"assets_num"  valid:"Required;MaxSize(255)"`
 }
 
@@ -297,4 +297,42 @@ func (d *DeviceController) UpdateForBusiness() {
 	}
 
 	d.Response(200, "更新设备成功")
+}
+
+// 通过业务ID，获取设备列表
+func (d *DeviceController) ListForIndex() {
+	deviceOfBusiness := DeviceOfBusiness{}
+	err := json.Unmarshal(d.Ctx.Input.RequestBody, &deviceOfBusiness)
+	if err != nil {
+		logs.Warn("Json Unmarshal Failed!", err.Error())
+		d.Response(500, "系统内部错误")
+		return
+	}
+	// 校验输入参数是否合法
+	v := validation.Validation{}
+	b, err := v.Valid(&deviceOfBusiness)
+	if err != nil {
+		// handler error
+		d.Response(500, "系统内部错误")
+		return
+	}
+	if !b {
+		// validation does not pass
+		for _, err := range v.Errors {
+			logs.Warn(err.Key, err.Message)
+		}
+		d.Response(400, "输入参数错误")
+		return
+	}
+
+	// 获取设备数据
+	var deviceService services.DeviceService
+
+	devices, err := deviceService.GetDeviceByClass(deviceOfBusiness.BusinessId)
+	if err != nil {
+		d.Response(400, "查找不到设备")
+		return
+	}
+
+	d.Response(200, "获取设备列表成功", devices)
 }

@@ -9,6 +9,19 @@ import (
 	"github.com/beego/beego/v2/client/orm"
 )
 
+//支持的设备类型
+const (
+	TEMPDEVICE     = "Temp"     //温度探测设备
+	SALINITYDEVICE = "Salinity" //盐度探测设备
+	CAMERADEVICE   = "Camera"   //相机监控设备
+)
+
+type DevicesOfBusiness struct {
+	Temp        []*models.Device `json:"temp"`
+	TempNum     int64            `json:"temp_num"`
+	Salinity    []*models.Device `json:"salinity"`
+	SalinityNum int64            `json:"salinity_num"`
+}
 type DeviceService struct {
 }
 
@@ -107,6 +120,34 @@ func (*DeviceService) GetDeviceByBusiness(businessId int) ([]*models.Device, err
 	}
 	logs.Info("Get Devices successful! Returned Rows Num: %#v", num)
 	return devices, err
+}
+
+// 通过业务ID获取设备并分类
+func (*DeviceService) GetDeviceByClass(businessId int) (*DevicesOfBusiness, error) {
+	var devs DevicesOfBusiness
+	//var devices []*models.Device
+	qs := mysql.Mydb.QueryTable(&models.Device{})
+	//获取温度传感器
+	num, err := qs.Filter("business_id", businessId).Filter("type", "Temp").All(&devs.Temp)
+	if err == orm.ErrNoRows {
+		logs.Warn("businessId %#v: Cannot find device!\n", businessId)
+		return nil, err
+	} else if err != nil {
+		logs.Warn(err)
+	}
+	devs.TempNum = num
+	logs.Info("Get Temp Devices successful! Returned Rows Num: %#v", num)
+
+	num, err = qs.Filter("business_id", businessId).Filter("type", "Salinity").All(&devs.Salinity)
+	if err == orm.ErrNoRows {
+		logs.Warn("businessId %#v: Cannot find device!\n", businessId)
+		return nil, err
+	} else if err != nil {
+		logs.Warn(err)
+	}
+	devs.SalinityNum = num
+	logs.Info("Get Salinity Devices successful! Returned Rows Num: %#v", num)
+	return &devs, err
 }
 
 // 通过未绑定业务的设备列表
