@@ -62,13 +62,47 @@ func (*DeviceService) Update(device *models.Device) error {
 	return err
 }
 
-// 添加设备
-func (*DeviceService) Delete(device *models.Device) error {
+// 删除设备
+func (*DeviceService) Delete(device *models.Device) (err error) {
 
-	id, err := mysql.Mydb.Delete(device)
+	// 删除设备, 同时删除设备上报的数据
+	to, err := mysql.Mydb.Begin()
+	if err != nil {
+		logs.Error("start the transaction failed")
+		return err
+	}
+	defer func() {
+		if err != nil {
+			err = to.Rollback()
+			if err != nil {
+				logs.Error("roll back transaction failed", err)
+			}
+		} else {
+			err = to.Commit()
+			if err != nil {
+				logs.Error("commit transaction failed.", err)
+			}
+		}
+	}()
+	//删除设备上报的数据
+
+	deviceData := models.DeviceData{
+		DevAssetsNum: device.AssetsNum,
+		DevType:      device.Type,
+	}
+	qs := to.QueryTable(deviceData).Filter("dev_assets_num", device.AssetsNum)
+	delid, err := qs.Delete()
+	if err != nil {
+		logs.Warn(err)
+		return
+	}
+	logs.Info("Delete Device Data num: ", delid)
+
+	id, err := to.Delete(device)
 	if err != nil {
 		logs.Warn(err)
 	}
+
 	logs.Info("Delete Device successful! ID:", id)
 	return err
 }
