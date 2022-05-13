@@ -14,7 +14,7 @@ import (
 
 func init() {
 	//生成测试数据
-TestCreateTempData()
+	//TestCreateTempData()
 }
 
 type DeviceData struct {

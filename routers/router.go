@@ -48,11 +48,15 @@ func init() {
 			// 获取最新的温度信息
 			web.NSRouter("/temperature/dev", &controllers.TempController{}, "*:GetTemp"),
 			web.NSRouter("/temperature/sendtempcmd", &controllers.TempController{}, "*:SendTempCmd"),
+			web.NSRouter("/salinity/devinday", &controllers.SaltController{}, "*:GetSaltInDay"),
+			web.NSRouter("/salinity/dev", &controllers.SaltController{}, "*:GetSalt"),
+			web.NSRouter("/salinity/sendsaltcmd", &controllers.SaltController{}, "*:SendSaltCmd"),
 		),
 
 		// 系统信息
 		web.NSNamespace("sys/",
 			web.NSRouter("/emqmetrisc", &controllers.EmqExportController{}, "*:GetMetrics"),
+			web.NSRouter("/sysinfo", &controllers.SysController{}, "*:GetSysinfo"),
 		),
 	)
 	web.AddNamespace(api)

@@ -2,7 +2,6 @@ package services
 
 import (
 	"encoding/json"
-	"oyster-iot/devaccess/modules/mqtt"
 	"oyster-iot/init/mysql"
 	"oyster-iot/models"
 	"strconv"
@@ -35,25 +34,6 @@ type TempMsg struct {
 type DevTempDay struct {
 	DevName  string          `json:"name"`
 	Templist [24]interface{} `json:"data"`
-}
-
-type TempCmd struct {
-	Token string      `json:"token,omitempty"`
-	Cmd   string      `json:"cmd"`
-	Data  interface{} `json:"data,omitempty"`
-}
-
-// 下发操作指令，发送命令到硬件端执行
-func (t *TempService) OperateCmd(tcmd *TempCmd) error {
-	tj, err := json.Marshal(tcmd)
-	if err != nil {
-		logs.Warn("Operate CMD Send Failed! err: ", err.Error())
-		return err
-	}
-	if err := mqtt.Send(tj); err != nil {
-		logs.Warn("Operate CMD Send Failed! err: ", err.Error())
-	}
-	return err
 }
 
 // 获取当前温度传感器的温度

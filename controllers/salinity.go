@@ -10,16 +10,11 @@ import (
 	"github.com/beego/beego/v2/core/validation"
 )
 
-type TempController struct {
+type SaltController struct {
 	BaseController
 }
 
-type DevAssetsInfo struct {
-	AssetsNum  string `json:"assets_num" valid:"MaxSize(255)"`
-	DeviceType string `json:"dev_type" valid:"MaxSize(64)"`
-}
-
-func (t *TempController) validAssetsInfo() (device *models.Device, err error) {
+func (t *SaltController) validAssetsInfo() (device *models.Device, err error) {
 	assetsInfo := DevAssetsInfo{}
 	err = json.Unmarshal(t.Ctx.Input.RequestBody, &assetsInfo)
 	if err != nil {
@@ -61,43 +56,26 @@ func (t *TempController) validAssetsInfo() (device *models.Device, err error) {
 	return
 }
 
-// 发送消息获取设备温度
-func (t *TempController) SendTempCmd() {
-	device, err := t.validAssetsInfo()
-	if err != nil {
-		return
-	}
-
-	cmd := &services.DevCmd{Token: device.Token, Cmd: services.RefreshTemp}
-	var devCmd services.DevCmd
-	if err := devCmd.OperateCmd(cmd); err != nil {
-		t.Response(500, "发送操作设备命令失败")
-		return
-	}
-
-	t.Response(200, "发送操作命令成功")
-}
-
 // 获取最新的设备温度信息
-func (t *TempController) GetTemp() {
+func (t *SaltController) GetSalt() {
 	device, err := t.validAssetsInfo()
 	if err != nil {
 		return
 	}
 	// 获取设备数据信息
-	var tempService services.TempService
-	tempData, err := tempService.GetTempOne(device.AssetsNum)
+	var saltService services.SaltService
+	saltData, err := saltService.GetSaltOne(device.AssetsNum)
 	if err != nil {
-		t.Response(500, "获取温度数据失败")
+		t.Response(500, "获取盐度数据失败")
 		return
 	}
 
 	// 数据转换展示给前端
-	t.Response(200, "获取温度数据成功", tempData)
+	t.Response(200, "获取盐度数据成功", saltData)
 }
 
 // 获取近24小时的设备的温度信息
-func (t *TempController) GetTempInDay() {
+func (t *SaltController) GetSaltInDay() {
 	assetsInfo := SomeDevAssets{}
 	err := json.Unmarshal(t.Ctx.Input.RequestBody, &assetsInfo)
 	if err != nil {
@@ -123,14 +101,31 @@ func (t *TempController) GetTempInDay() {
 	}
 
 	// 获取设备数据信息
-	var tempService services.TempService
-	tempData, err := tempService.GetTempInDay(assetsInfo.AssetsNum)
+	var saltService services.SaltService
+	saltData, err := saltService.GetSaltInDay(assetsInfo.AssetsNum)
 	if err != nil {
 		logs.Warn(err.Error())
-		t.Response(500, "获取温度数据失败")
+		t.Response(500, "获取盐度数据失败")
 		return
 	}
 
 	// 数据转换展示给前端
-	t.Response(200, "获取温度数据成功", tempData)
+	t.Response(200, "获取盐度数据成功", saltData)
+}
+
+// 发送消息获取设备温度
+func (t *SaltController) SendSaltCmd() {
+	device, err := t.validAssetsInfo()
+	if err != nil {
+		return
+	}
+
+	cmd := &services.DevCmd{Token: device.Token, Cmd: services.RefreshSalt}
+	var devCmd services.DevCmd
+	if err := devCmd.OperateCmd(cmd); err != nil {
+		t.Response(500, "发送操作设备命令失败")
+		return
+	}
+
+	t.Response(200, "发送操作命令成功")
 }
