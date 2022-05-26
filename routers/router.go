@@ -75,7 +75,9 @@ func AuthMiddle() {
 		if !isAuthExceptUrl(strings.ToLower(url), noLogin) {
 			//获取TOKEN
 			if len(ctx.Request.Header["Authorization"]) == 0 {
-				ctx.Redirect(302, "/login.html")
+				// ctx.Redirect(302, "/login.html")
+				ctx.ResponseWriter.WriteHeader(401)
+				ctx.WriteString("login out")
 				return
 			}
 			authorization := ctx.Request.Header["Authorization"][0]
@@ -83,12 +85,14 @@ func AuthMiddle() {
 			_, err := jwt.ParseCliamsToken(userToken)
 			if err != nil {
 				// 异常
-				ctx.Redirect(302, "/login.html")
+				ctx.ResponseWriter.WriteHeader(401)
+				ctx.WriteString("login out")
 				return
 			}
 			s, _ := cache.Bm.IsExist(c.TODO(), userToken)
 			if !s {
-				ctx.Redirect(302, "/login.html")
+				ctx.ResponseWriter.WriteHeader(401)
+				ctx.WriteString("login out")
 				return
 			}
 		}

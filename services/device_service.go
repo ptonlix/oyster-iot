@@ -124,10 +124,16 @@ func (*DeviceService) GetDeviceByAssetsNum(assetsNum string) (*models.Device, er
 }
 
 // 获取全部设备
-func (*DeviceService) GetDevicesByPage(pageSize, pageNum int) ([]*models.Device, error) {
+func (*DeviceService) GetDevicesByPage(pageSize, pageNum int) (int, int, []*models.Device, error) {
 
 	var devices []*models.Device
 	qs := mysql.Mydb.QueryTable(&models.Device{})
+
+	totalRecord, err := qs.Count()
+	if err != nil {
+		logs.Warn(err)
+
+	}
 
 	num, err := qs.Limit(pageSize, pageSize*(pageNum-1)).All(&devices)
 
@@ -135,9 +141,11 @@ func (*DeviceService) GetDevicesByPage(pageSize, pageNum int) ([]*models.Device,
 		logs.Warn(err)
 	}
 
-	logs.Info("Get Devices successful! Returned Rows Num: %#v", num)
+	totalPageNum := (int(totalRecord) + pageSize - 1) / pageSize
 
-	return devices, err
+	logs.Info("Get Devices successful! Totalcount: %v TotalPages: %v Returned Rows Num: %#v", totalRecord, totalPageNum, num)
+
+	return int(totalRecord), totalPageNum, devices, err
 }
 
 // 通过业务ID获取设备
@@ -185,16 +193,26 @@ func (*DeviceService) GetDeviceByClass(businessId int) (*DevicesOfBusiness, erro
 }
 
 // 通过未绑定业务的设备列表
-func (*DeviceService) GetDeviceByNilBusiness() ([]*models.Device, error) {
+func (*DeviceService) GetDeviceByNilBusiness(pageSize, pageNum int) (int, int, []*models.Device, error) {
 	var devices []*models.Device
 	qs := mysql.Mydb.QueryTable(&models.Device{})
 
-	num, err := qs.Filter("business_id", 0).All(&devices)
+	totalRecord, err := qs.Filter("business_id", 0).Count()
+	if err != nil {
+		logs.Warn(err)
+
+	}
+
+	num, err := qs.Filter("business_id", 0).Limit(pageSize, pageSize*(pageNum-1)).All(&devices)
 	if err != nil {
 		logs.Warn(err)
 	}
-	logs.Info("Get Devices successful! Returned Rows Num: %#v", num)
-	return devices, err
+
+	totalPageNum := (int(totalRecord) + pageSize - 1) / pageSize
+
+	logs.Info("Get Devices successful! Totalcount: %v TotalPages: %v Returned Rows Num: %#v", totalRecord, totalPageNum, num)
+
+	return int(totalRecord), totalPageNum, devices, err
 }
 
 // 修改设备关联的业务ID
