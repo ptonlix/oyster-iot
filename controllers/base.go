@@ -13,6 +13,11 @@ type PageParam struct {
 	Pagenum  int `json:"pagenum" valid:"Max(255)"`
 }
 
+type SomeDevAssets struct {
+	AssetsNum  []string `json:"assets_nums" valid:"MaxSize(255)"`
+	DeviceType string   `json:"dev_type" valid:"MaxSize(64)"`
+}
+
 func (c *BaseController) Response(code int, msg string, data ...interface{}) {
 	type JSONStruct struct {
 		Code int         `json:"code"`

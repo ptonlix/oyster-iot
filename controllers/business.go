@@ -19,6 +19,12 @@ type BusinessInfo struct {
 	Remark     string `json:"remark" valid:"MaxSize(255)"`
 }
 
+type BusinessList struct {
+	TotalNum     int                 `json:"totalnum"`
+	TotalPages   int                 `json:"totalpages"`
+	BusinessList *[]*models.Business `json:"list"`
+}
+
 // 增加一个业务
 func (b *BusinessController) Add() {
 	businessInfo := BusinessInfo{}
@@ -170,11 +176,15 @@ func (b *BusinessController) List() {
 	}
 	//插入业务数据
 	var businessS services.BusinessService
-	business, err := businessS.GetBusinessByPage(pageparam.Pagesize, pageparam.Pagenum)
+	totalNum, totalPages, business, err := businessS.GetBusinessByPage(pageparam.Pagesize, pageparam.Pagenum)
 	if err != nil {
 		b.Response(400, "查找不到设备")
 		return
 	}
-
-	b.Response(200, "获取业务列表成功", business)
+	retList := BusinessList{
+		TotalNum:     totalNum,
+		TotalPages:   totalPages,
+		BusinessList: &business,
+	}
+	b.Response(200, "获取业务列表成功", &retList)
 }

@@ -48,11 +48,15 @@ func init() {
 			// 获取最新的温度信息
 			web.NSRouter("/temperature/dev", &controllers.TempController{}, "*:GetTemp"),
 			web.NSRouter("/temperature/sendtempcmd", &controllers.TempController{}, "*:SendTempCmd"),
+			web.NSRouter("/salinity/devinday", &controllers.SaltController{}, "*:GetSaltInDay"),
+			web.NSRouter("/salinity/dev", &controllers.SaltController{}, "*:GetSalt"),
+			web.NSRouter("/salinity/sendsaltcmd", &controllers.SaltController{}, "*:SendSaltCmd"),
 		),
 
 		// 系统信息
 		web.NSNamespace("sys/",
 			web.NSRouter("/emqmetrisc", &controllers.EmqExportController{}, "*:GetMetrics"),
+			web.NSRouter("/sysinfo", &controllers.SysController{}, "*:GetSysinfo"),
 		),
 	)
 	web.AddNamespace(api)
@@ -71,7 +75,9 @@ func AuthMiddle() {
 		if !isAuthExceptUrl(strings.ToLower(url), noLogin) {
 			//获取TOKEN
 			if len(ctx.Request.Header["Authorization"]) == 0 {
-				ctx.Redirect(302, "/login.html")
+				// ctx.Redirect(302, "/login.html")
+				ctx.ResponseWriter.WriteHeader(401)
+				ctx.WriteString("login out")
 				return
 			}
 			authorization := ctx.Request.Header["Authorization"][0]
@@ -79,12 +85,14 @@ func AuthMiddle() {
 			_, err := jwt.ParseCliamsToken(userToken)
 			if err != nil {
 				// 异常
-				ctx.Redirect(302, "/login.html")
+				ctx.ResponseWriter.WriteHeader(401)
+				ctx.WriteString("login out")
 				return
 			}
 			s, _ := cache.Bm.IsExist(c.TODO(), userToken)
 			if !s {
-				ctx.Redirect(302, "/login.html")
+				ctx.ResponseWriter.WriteHeader(401)
+				ctx.WriteString("login out")
 				return
 			}
 		}

@@ -80,18 +80,25 @@ func (b *BusinessService) Delete(business *models.Business) (err error) {
 }
 
 // 获取全部设备
-func (*BusinessService) GetBusinessByPage(pageSize, pageNum int) ([]*models.Business, error) {
+func (*BusinessService) GetBusinessByPage(pageSize, pageNum int) (int, int, []*models.Business, error) {
 
 	var business []*models.Business
 	qs := mysql.Mydb.QueryTable(&models.Business{})
 
+	totalRecord, err := qs.Count()
+	if err != nil {
+		logs.Warn(err)
+
+	}
 	num, err := qs.Limit(pageSize, pageSize*(pageNum-1)).All(&business)
 
 	if err != nil {
 		logs.Warn(err)
 	}
 
-	logs.Info("Get Business successful! Returned Rows Num: %#v", num)
+	totalPageNum := (int(totalRecord) + pageSize - 1) / pageSize
 
-	return business, err
+	logs.Info("Get Business successful! Totalcount: %v TotalPages: %v Returned Rows Num: %#v", totalRecord, totalPageNum, num)
+
+	return int(totalRecord), totalPageNum, business, err
 }

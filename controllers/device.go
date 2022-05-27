@@ -34,6 +34,12 @@ type DevUpBusiness struct {
 	AssetsNum  []string `json:"assets_num"  valid:"Required;MaxSize(255)"`
 }
 
+type DeviceList struct {
+	TotalNum   int               `json:"totalnum"`
+	TotalPages int               `json:"totalpages"`
+	DeviceList *[]*models.Device `json:"list"`
+}
+
 func (d *DeviceController) Add() {
 	deviceInfo := DeviceInfo{}
 	err := json.Unmarshal(d.Ctx.Input.RequestBody, &deviceInfo)
@@ -206,13 +212,18 @@ func (d *DeviceController) List() {
 	// 获取设备数据
 	var deviceService services.DeviceService
 
-	devices, err := deviceService.GetDevicesByPage(pageparam.Pagesize, pageparam.Pagenum)
+	totalNum, totalPages, devices, err := deviceService.GetDevicesByPage(pageparam.Pagesize, pageparam.Pagenum)
 	if err != nil {
 		d.Response(400, "查找不到设备")
 		return
 	}
 
-	d.Response(200, "获取设备列表成功", devices)
+	retList := DeviceList{
+		TotalNum:   totalNum,
+		TotalPages: totalPages,
+		DeviceList: &devices,
+	}
+	d.Response(200, "获取设备列表成功", retList)
 }
 
 // 通过业务ID，获取设备列表
@@ -255,10 +266,43 @@ func (d *DeviceController) ListForBusiness() {
 
 // 获取空业务的设备列表
 func (d *DeviceController) ListForNilBusiness() {
+	//获取URL参数
+	pageparam := PageParam{}
+	d.Ctx.Input.Bind(&pageparam.Pagesize, "pagesize")
+	d.Ctx.Input.Bind(&pageparam.Pagenum, "pagenum")
+	logs.Debug("pagesize is %#v, pagenum is %#v", pageparam.Pagesize, pageparam.Pagenum)
+
+	// 校验输入参数是否合法
+	v := validation.Validation{}
+	b, err := v.Valid(&pageparam)
+	if err != nil {
+		// handler error
+		d.Response(500, "系统内部错误")
+		return
+	}
+	if !b {
+		// validation does not pass
+		for _, err := range v.Errors {
+			logs.Warn(err.Key, err.Message)
+		}
+		d.Response(400, "输入参数错误")
+		return
+	}
 	// 获取设备数据
 	var deviceService services.DeviceService
-	devices, _ := deviceService.GetDeviceByNilBusiness()
-	d.Response(200, "获取设备列表成功", devices)
+
+	totalNum, totalPages, devices, err := deviceService.GetDeviceByNilBusiness(pageparam.Pagesize, pageparam.Pagenum)
+	if err != nil {
+		d.Response(400, "查找不到设备")
+		return
+	}
+
+	retList := DeviceList{
+		TotalNum:   totalNum,
+		TotalPages: totalPages,
+		DeviceList: &devices,
+	}
+	d.Response(200, "获取设备列表成功", retList)
 }
 
 // 更新设备的业务ID
