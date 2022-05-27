@@ -9,8 +9,9 @@ type BaseController struct {
 }
 
 type PageParam struct {
-	Pagesize int `json:"pagesize" valid:"Max(255)"`
-	Pagenum  int `json:"pagenum" valid:"Max(255)"`
+	Pagesize int    `json:"pagesize" valid:"Max(255)"`
+	Pagenum  int    `json:"pagenum" valid:"Max(255)"`
+	Keyword  string `json:"keyword,omitempy" valid:"MaxSize(255)"`
 }
 
 type SomeDevAssets struct {

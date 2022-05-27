@@ -68,7 +68,7 @@ func (t *TempController) SendTempCmd() {
 		return
 	}
 
-	cmd := &services.DevCmd{Token: device.Token, Cmd: services.RefreshTemp}
+	cmd := &services.DevCmd{AssetsNum: device.AssetsNum, Token: device.Token, Cmd: services.RefreshTemp}
 	var devCmd services.DevCmd
 	if err := devCmd.OperateCmd(cmd); err != nil {
 		t.Response(500, "发送操作设备命令失败")

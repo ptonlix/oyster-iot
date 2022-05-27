@@ -11,8 +11,9 @@ type DevdataSevice struct {
 }
 
 type mqttPayload struct {
-	Token string                 `json:"token"`
-	Msg   map[string]interface{} `json:"msg"`
+	AssetsNum string                 `json:"assets_num"`
+	Token     string                 `json:"token"`
+	Msg       map[string]interface{} `json:"msg"`
 }
 
 func (d *DevdataSevice) MQTTMsgProc(msgbody []byte) (err error) {
@@ -35,7 +36,7 @@ func (d *DevdataSevice) MQTTMsgProc(msgbody []byte) (err error) {
 	//1.查询设备表，判断Token的合法性
 	var deviceService DeviceService
 	var device *models.Device
-	if device, err = deviceService.GetDeviceByTokenID(payload.Token); err != nil {
+	if device, err = deviceService.GetDeviceByTokenID(payload.Token, payload.AssetsNum); err != nil {
 		logs.Warn("Msg Consumer: Cannot find device!")
 		return err
 	}

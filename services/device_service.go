@@ -26,10 +26,10 @@ type DeviceService struct {
 }
 
 // 通过Token 获取设备信息
-func (*DeviceService) GetDeviceByTokenID(token string) (*models.Device, error) {
-	device := models.Device{Token: token}
-
-	err := mysql.Mydb.Read(&device, "Token")
+func (*DeviceService) GetDeviceByTokenID(token, assetnum string) (*models.Device, error) {
+	device := models.Device{Token: token, AssetsNum: assetnum}
+	// 增加UUID的判断
+	err := mysql.Mydb.Read(&device, "Token", "AssetsNum")
 
 	if err == orm.ErrNoRows {
 		logs.Warn("Token %s: Cannot find device!", token)
@@ -146,6 +146,35 @@ func (*DeviceService) GetDevicesByPage(pageSize, pageNum int) (int, int, []*mode
 	logs.Info("Get Devices successful! Totalcount: %v TotalPages: %v Returned Rows Num: %#v", totalRecord, totalPageNum, num)
 
 	return int(totalRecord), totalPageNum, devices, err
+}
+
+// 可以支持关键字搜索查询
+func (*DeviceService) GetDevicesByPageAndKey(pageSize, pageNum int, keyword string) (int, int, []*models.Device, error) {
+
+	DevsData := []*models.Device{}
+
+	totalRecord, err := mysql.Mydb.Raw("SELECT * FROM device WHERE concat(ifnull(device_name,''), ifnull(assets_num,'')) like ?", "%"+keyword+"%").QueryRows(&DevsData)
+	if err == orm.ErrNoRows {
+		logs.Warn("Get Keyword:%#v  ErrNoRows!", keyword)
+		return 0, 0, nil, err
+	} else if err != nil {
+		logs.Warn("Get Keyword:%#v  Failed! err:%#v", keyword, err)
+		return 0, 0, nil, err
+	}
+	totalPageNum := (int(totalRecord) + pageSize - 1) / pageSize
+
+	num, err := mysql.Mydb.Raw("SELECT * FROM device WHERE concat(ifnull(device_name,''), ifnull(assets_num,'')) like ? LIMIT ? OFFSET  ?", "%"+keyword+"%", pageSize, pageSize*(pageNum-1)).QueryRows(&DevsData)
+
+	if err == orm.ErrNoRows {
+		logs.Warn("Get Keyword:%#v  ErrNoRows!", keyword)
+		return 0, 0, nil, err
+	} else if err != nil {
+		logs.Warn("Get Keyword:%#v  Failed! err:%#v", keyword, err)
+		return 0, 0, nil, err
+	}
+
+	logs.Info("Get Devices successful! Totalcount: %v TotalPages: %v Returned Rows Num: %#v", totalRecord, totalPageNum, num)
+	return int(totalRecord), totalPageNum, DevsData, err
 }
 
 // 通过业务ID获取设备

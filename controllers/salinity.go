@@ -120,7 +120,7 @@ func (t *SaltController) SendSaltCmd() {
 		return
 	}
 
-	cmd := &services.DevCmd{Token: device.Token, Cmd: services.RefreshSalt}
+	cmd := &services.DevCmd{AssetsNum: device.AssetsNum, Token: device.Token, Cmd: services.RefreshSalt}
 	var devCmd services.DevCmd
 	if err := devCmd.OperateCmd(cmd); err != nil {
 		t.Response(500, "发送操作设备命令失败")
