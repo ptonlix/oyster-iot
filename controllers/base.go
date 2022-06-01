@@ -1,6 +1,10 @@
 package controllers
 
 import (
+	"errors"
+	jwt "oyster-iot/utils"
+
+	"github.com/beego/beego/logs"
 	beego "github.com/beego/beego/v2/server/web"
 )
 
@@ -35,4 +39,17 @@ func (c *BaseController) Response(code int, msg string, data ...interface{}) {
 	c.Data["json"] = mystruct
 	c.ServeJSON()
 
+}
+
+//获取当前用户
+func (c *BaseController) GetUserInfo() (int, error) {
+	authorization := c.Ctx.Request.Header["Authorization"][0]
+	userToken := authorization[len(jwt.JWTType)+1:]
+	jwtInfo, err := jwt.ParseCliamsToken(userToken)
+	if err != nil {
+		logs.Error("Parse JWT Error!")
+		return -1, errors.New("Parse JWT Error!")
+	}
+
+	return jwtInfo.Id, nil
 }

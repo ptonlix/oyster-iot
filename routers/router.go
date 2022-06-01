@@ -17,14 +17,15 @@ import (
 
 func init() {
 
-	//AuthMiddle()
+	AuthMiddle()
 
 	api := web.NewNamespace("/api",
 		// 登录
 		web.NSRouter("/auth/login", &controllers.AuthController{}, "*:Login"),
 		web.NSRouter("/auth/logout", &controllers.AuthController{}, "*:Logout"),
 		web.NSRouter("/auth/refresh", &controllers.AuthController{}, "*:Refresh"),
-		// web.NSRouter("/auth/me", &controllers.AuthController{}, "*:Me"),
+		web.NSRouter("/auth/getuserinfo", &controllers.AuthController{}, "*:Getuserinfo"),
+		// web.NSRouter("/auth/me", &controllers.AuthController{}, "*:Me"),TenantGetById
 		// web.NSRouter("/auth/register", &controllers.AuthController{}, "*:Register"),
 
 		// 设备管理

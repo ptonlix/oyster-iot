@@ -32,7 +32,7 @@ func init() {
 		mysqlport,
 		mysqldb,
 	)
-	fmt.Println(dataSource)
+	logs.Info(dataSource)
 	orm.RegisterDriver("mysql", orm.DRMySQL)
 	err := orm.RegisterDataBase("default", "mysql", dataSource)
 	if err != nil {
@@ -42,7 +42,7 @@ func init() {
 	orm.SetMaxIdleConns("default", mysqlMaxIdle)
 	orm.SetMaxOpenConns("default", mysqlMaxConn)
 	orm.RegisterModel(new(models.Device), new(models.DeviceData), new(models.Users), new(models.Business))
-	orm.RunSyncdb("default", false, true) //第二个参数是是否强制建表，true会删除数据库数据重新建表
+	orm.RunSyncdb("default", false, false) //第二个参数是是否强制建表，true会删除数据库数据重新建表
 	//orm.RunCommand() //命令模式 /main orm 显示帮助
 	Mydb = orm.NewOrm()
 

@@ -209,7 +209,7 @@ func (d *DeviceController) List() {
 		d.Response(400, "输入参数错误")
 		return
 	}
-
+	d.GetUserInfo()
 	// 获取设备数据
 	var deviceService services.DeviceService
 

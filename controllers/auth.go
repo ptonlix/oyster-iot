@@ -32,6 +32,16 @@ type LoginInfo struct {
 	Password string `json:"passwd" valid:"Required;MinSize(6);MaxSize(100)"`
 }
 
+type LoginUserInfo struct {
+	Enabled   bool   `json:"enabled"`
+	Email     string `json:"email"`
+	Firstname string `json:"first_name"`
+	Lastname  string `json:"last_name"`
+	Mobile    string `json:"mobile"`
+	Remark    string `json:"remark"`
+	IsAdmin   bool   `json:"is_admin"`
+}
+
 // 如果你的 struct 实现了接口 validation.ValidFormer
 // 当 StructTag 中的测试都成功时，将会执行 Valid 函数进行自定义验证
 func (u *LoginInfo) Valid(v *validation.Validation) {
@@ -164,4 +174,30 @@ func (u *AuthController) Refresh() {
 	cache.Bm.Put(context.TODO(), token, 1, 3000*time.Second)
 	// 登录成功
 	u.Response(200, "Token刷新成功", d)
+}
+
+// 获取当前用户信息
+func (u *AuthController) Getuserinfo() {
+	id, err := u.GetUserInfo()
+	if err != nil {
+		u.Response(400, "token异常")
+		return
+	}
+	var UserService services.UserService
+	user, err := UserService.GetUserById(id)
+	if err != nil {
+		u.Response(500, "该账户不存在")
+		return
+	}
+	userinfo := LoginUserInfo{
+		Enabled:   user.Enabled,
+		Email:     user.Email,
+		Firstname: user.Firstname,
+		Lastname:  user.Lastname,
+		Mobile:    user.Mobile,
+		Remark:    user.Remark,
+		IsAdmin:   user.IsAdmin,
+	}
+
+	u.Response(200, "获取当前用户信息成功", userinfo)
 }
