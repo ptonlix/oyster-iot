@@ -13,9 +13,10 @@ const (
 )
 
 type DevCmd struct {
-	Token string      `json:"token,omitempty"`
-	Cmd   string      `json:"cmd"`
-	Data  interface{} `json:"data,omitempty"`
+	AssetsNum string      `json:"assets_num"`
+	Token     string      `json:"token,omitempty"`
+	Cmd       string      `json:"cmd"`
+	Data      interface{} `json:"data,omitempty"`
 }
 
 // 下发操作指令，发送命令到硬件端执行

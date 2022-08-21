@@ -32,7 +32,7 @@ func init() {
 		mysqlport,
 		mysqldb,
 	)
-	fmt.Println(dataSource)
+	logs.Info(dataSource)
 	orm.RegisterDriver("mysql", orm.DRMySQL)
 	err := orm.RegisterDataBase("default", "mysql", dataSource)
 	if err != nil {
@@ -41,9 +41,9 @@ func init() {
 	logs.Info("Connect Mysql DataBase Success!")
 	orm.SetMaxIdleConns("default", mysqlMaxIdle)
 	orm.SetMaxOpenConns("default", mysqlMaxConn)
-	orm.RegisterModel(new(models.Device), new(models.DeviceData), new(models.Users), new(models.Business))
-	orm.RunSyncdb("default", false, true) //第二个参数是是否强制建表，true会删除数据库数据重新建表
-	//orm.RunCommand() //命令模式 /main orm 显示帮助
+	orm.RegisterModel(new(models.Device), new(models.DeviceData), new(models.Users), new(models.Business), new(models.ManageUsers), new(models.Operlog), new(models.VideoSpace))
+	//orm.RunSyncdb("default", false, true) //第二个参数是是否强制建表，true会删除数据库数据重新建表
+	orm.RunCommand() //命令模式 /main orm 显示帮助
 	Mydb = orm.NewOrm()
 
 	addDefaultUser()
@@ -56,6 +56,20 @@ func addDefaultUser() {
 		Id:        1,
 		Username:  "admin",
 		Password:  bcrypt.HashAndSalt([]byte("123456")),
+		Enabled:   true,
+		Email:     "260431910@qq.com",
+		Firstname: "Chen",
+		Lastname:  "Fudong",
+		Mobile:    "13510605710",
+		Remark:    "管理员账号",
+		IsAdmin:   true,
+		Wxopenid:  "test",
+		Wxunionid: "test",
+	})
+	_, _ = Mydb.Insert(&models.ManageUsers{
+		Id:        1,
+		Username:  "admin",
+		Password:  bcrypt.HashAndSalt([]byte("oyster2022")),
 		Enabled:   true,
 		Email:     "260431910@qq.com",
 		Firstname: "Chen",

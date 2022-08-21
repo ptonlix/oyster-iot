@@ -22,14 +22,21 @@ type DevicesOfBusiness struct {
 	Salinity    []*models.Device `json:"salinity"`
 	SalinityNum int64            `json:"salinity_num"`
 }
+
+type DevicesOfAllNum struct {
+	AllNum      int64 `json:"all_num"`
+	TempNum     int64 `json:"temp_num"`
+	SalinityNum int64 `json:"salinity_num"`
+}
+
 type DeviceService struct {
 }
 
 // 通过Token 获取设备信息
-func (*DeviceService) GetDeviceByTokenID(token string) (*models.Device, error) {
-	device := models.Device{Token: token}
-
-	err := mysql.Mydb.Read(&device, "Token")
+func (*DeviceService) GetDeviceByTokenID(token, assetnum string) (*models.Device, error) {
+	device := models.Device{Token: token, AssetsNum: assetnum}
+	// 增加UUID的判断
+	err := mysql.Mydb.Read(&device, "Token", "AssetsNum")
 
 	if err == orm.ErrNoRows {
 		logs.Warn("Token %s: Cannot find device!", token)
@@ -46,6 +53,7 @@ func (*DeviceService) Add(device *models.Device) error {
 	id, err := mysql.Mydb.Insert(device)
 	if err != nil {
 		logs.Warn(err)
+		return err
 	}
 	logs.Info("Insert Device successful! ID:", id)
 	return err
@@ -57,6 +65,7 @@ func (*DeviceService) Update(device *models.Device) error {
 	id, err := mysql.Mydb.Update(device)
 	if err != nil {
 		logs.Warn(err)
+		return err
 	}
 	logs.Info("Update Device successful! ID:", id)
 	return err
@@ -101,6 +110,7 @@ func (*DeviceService) Delete(device *models.Device) (err error) {
 	id, err := to.Delete(device)
 	if err != nil {
 		logs.Warn(err)
+		return
 	}
 
 	logs.Info("Delete Device successful! ID:", id)
@@ -148,6 +158,35 @@ func (*DeviceService) GetDevicesByPage(pageSize, pageNum int) (int, int, []*mode
 	return int(totalRecord), totalPageNum, devices, err
 }
 
+// 可以支持关键字搜索查询
+func (*DeviceService) GetDevicesByPageAndKey(userId, pageSize, pageNum int, keyword string) (int, int, []*models.Device, error) {
+
+	DevsData := []*models.Device{}
+
+	totalRecord, err := mysql.Mydb.Raw("SELECT * FROM device WHERE user_id = ? AND concat(ifnull(device_name,''), ifnull(assets_num,'')) like ?", userId, "%"+keyword+"%").QueryRows(&DevsData)
+	if err == orm.ErrNoRows {
+		logs.Warn("Get Keyword:%#v  ErrNoRows!", keyword)
+		return 0, 0, nil, err
+	} else if err != nil {
+		logs.Warn("Get Keyword:%#v  Failed! err:%#v", keyword, err)
+		return 0, 0, nil, err
+	}
+	totalPageNum := (int(totalRecord) + pageSize - 1) / pageSize
+
+	num, err := mysql.Mydb.Raw("SELECT * FROM device WHERE user_id = ? AND concat(ifnull(device_name,''), ifnull(assets_num,'')) like ? LIMIT ? OFFSET  ?", userId, "%"+keyword+"%", pageSize, pageSize*(pageNum-1)).QueryRows(&DevsData)
+
+	if err == orm.ErrNoRows {
+		logs.Warn("Get Keyword:%#v  ErrNoRows!", keyword)
+		return 0, 0, nil, err
+	} else if err != nil {
+		logs.Warn("Get Keyword:%#v  Failed! err:%#v", keyword, err)
+		return 0, 0, nil, err
+	}
+
+	logs.Info("Get Devices successful! Totalcount: %v TotalPages: %v Returned Rows Num: %#v", totalRecord, totalPageNum, num)
+	return int(totalRecord), totalPageNum, DevsData, err
+}
+
 // 通过业务ID获取设备
 func (*DeviceService) GetDeviceByBusiness(businessId int) ([]*models.Device, error) {
 	var devices []*models.Device
@@ -193,7 +232,7 @@ func (*DeviceService) GetDeviceByClass(businessId int) (*DevicesOfBusiness, erro
 }
 
 // 通过未绑定业务的设备列表
-func (*DeviceService) GetDeviceByNilBusiness(pageSize, pageNum int) (int, int, []*models.Device, error) {
+func (*DeviceService) GetDeviceByNilBusiness(userId, pageSize, pageNum int) (int, int, []*models.Device, error) {
 	var devices []*models.Device
 	qs := mysql.Mydb.QueryTable(&models.Device{})
 
@@ -203,7 +242,7 @@ func (*DeviceService) GetDeviceByNilBusiness(pageSize, pageNum int) (int, int, [
 
 	}
 
-	num, err := qs.Filter("business_id", 0).Limit(pageSize, pageSize*(pageNum-1)).All(&devices)
+	num, err := qs.Filter("user_id", userId).Filter("business_id", 0).Limit(pageSize, pageSize*(pageNum-1)).All(&devices)
 	if err != nil {
 		logs.Warn(err)
 	}
@@ -255,4 +294,40 @@ func (*DeviceService) UpdateForBusiness(assertsNum []string, businessId int) (er
 		}
 	}
 	return nil
+}
+
+// 获取全部设备
+func (*DeviceService) GetAllDevicesNum() (*DevicesOfAllNum, error) {
+	var devsnum DevicesOfAllNum
+	qs := mysql.Mydb.QueryTable(&models.Device{})
+	//获取温度传感器
+	num, err := qs.Count()
+	if err == orm.ErrNoRows {
+		logs.Warn(" Cannot find Temp device!\n")
+		return nil, err
+	} else if err != nil {
+		logs.Warn(err)
+	}
+	devsnum.AllNum = num
+	//获取温度传感器
+	num, err = qs.Filter("type", "Temp").Count()
+	if err == orm.ErrNoRows {
+		logs.Warn(" Cannot find Temp device!\n")
+		return nil, err
+	} else if err != nil {
+		logs.Warn(err)
+	}
+	devsnum.TempNum = num
+	logs.Info("Get Temp Devices successful! Returned  Num: %#v", num)
+
+	num, err = qs.Filter("type", "Salinity").Count()
+	if err == orm.ErrNoRows {
+		logs.Warn("Cannot find Salinity device!\n")
+		return nil, err
+	} else if err != nil {
+		logs.Warn(err)
+	}
+	devsnum.SalinityNum = num
+	logs.Info("Get Salinity Devices successful! Returned  Num: %#v", num)
+	return &devsnum, err
 }

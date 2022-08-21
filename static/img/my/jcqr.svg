@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="28px" height="28px" viewBox="0 0 28 28" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>编组备份</title>
+    <defs>
+        <linearGradient x1="28.9329123%" y1="29.2693755%" x2="63.998512%" y2="72.3623059%" id="linearGradient-1">
+            <stop stop-color="#189FFF" offset="0%"></stop>
+            <stop stop-color="#44D1FF" offset="100%"></stop>
+        </linearGradient>
+        <rect id="path-2" x="0" y="0" width="24.5" height="24.5" rx="3"></rect>
+        <filter x="-8.2%" y="-8.2%" width="116.3%" height="116.3%" filterUnits="objectBoundingBox" id="filter-3">
+            <feGaussianBlur stdDeviation="1" in="SourceAlpha" result="shadowBlurInner1"></feGaussianBlur>
+            <feOffset dx="0" dy="2" in="shadowBlurInner1" result="shadowOffsetInner1"></feOffset>
+            <feComposite in="shadowOffsetInner1" in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="shadowInnerInner1"></feComposite>
+            <feColorMatrix values="0 0 0 0 1   0 0 0 0 1   0 0 0 0 1  0 0 0 0.353023076 0" type="matrix" in="shadowInnerInner1"></feColorMatrix>
+        </filter>
+    </defs>
+    <g id="页面-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="教师/我的" transform="translate(-121.000000, -308.000000)">
+            <g id="编组-4" transform="translate(111.000000, 308.000000)">
+                <g id="编组备份" transform="translate(10.000000, 0.000000)">
+                    <rect id="矩形" x="0" y="0" width="28" height="28"></rect>
+                    <g id="编组-2" transform="translate(1.750000, 1.750000)" fill-rule="nonzero">
+                        <g id="矩形">
+                            <use fill="url(#linearGradient-1)" xlink:href="#path-2"></use>
+                            <use fill="black" fill-opacity="1" filter="url(#filter-3)" xlink:href="#path-2"></use>
+                        </g>
+                    </g>
+                    <text id="借" font-family="PingFangSC-Semibold, PingFang SC" font-size="16" font-weight="500" fill="#FFFFFF">
+                        <tspan x="7" y="20">借</tspan>
+                    </text>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

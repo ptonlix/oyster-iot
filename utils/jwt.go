@@ -14,6 +14,7 @@ const (
 type UserClaims struct {
 	Id         int       `json:"id"`   //用户的ID
 	Username   string    `json:"name"` //用户名
+	Usertype   string    `json:"type"` //用户所属平台 小程序wechat 管理平台manage
 	CreateTime time.Time `json:"create_time"`
 	jwt.StandardClaims
 }

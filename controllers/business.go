@@ -50,9 +50,16 @@ func (b *BusinessController) Add() {
 		b.Response(400, "输入参数错误")
 		return
 	}
+	userId, _, err := b.GetUserInfo()
+	if err != nil {
+		b.Response(500, "查询当前用户失败")
+		return
+	}
+
 	businessM := &models.Business{
 		Name:   businessInfo.Name,
 		Remark: businessInfo.Remark,
+		UserId: userId,
 	}
 	//插入业务数据
 	var businessS services.BusinessService
@@ -94,10 +101,16 @@ func (b *BusinessController) Edit() {
 		b.Response(400, "输入参数错误")
 		return
 	}
+	userId, _, err := b.GetUserInfo()
+	if err != nil {
+		b.Response(500, "查询当前用户失败")
+		return
+	}
 	businessM := &models.Business{
 		Id:     businessInfo.BusinessID,
 		Name:   businessInfo.Name,
 		Remark: businessInfo.Remark,
+		UserId: userId,
 	}
 	//插入业务数据
 	var businessS services.BusinessService
@@ -174,9 +187,14 @@ func (b *BusinessController) List() {
 		b.Response(400, "输入参数错误")
 		return
 	}
+	userId, _, err := b.GetUserInfo()
+	if err != nil {
+		b.Response(500, "查询当前用户失败")
+		return
+	}
 	//插入业务数据
 	var businessS services.BusinessService
-	totalNum, totalPages, business, err := businessS.GetBusinessByPage(pageparam.Pagesize, pageparam.Pagenum)
+	totalNum, totalPages, business, err := businessS.GetBusinessByPage(userId, pageparam.Pagesize, pageparam.Pagenum)
 	if err != nil {
 		b.Response(400, "查找不到设备")
 		return
@@ -187,4 +205,17 @@ func (b *BusinessController) List() {
 		BusinessList: &business,
 	}
 	b.Response(200, "获取业务列表成功", &retList)
+}
+
+// 获取业务列表
+func (b *BusinessController) ListForAllNum() {
+	//插入业务数据
+	var businessS services.BusinessService
+	totalNum, err := businessS.GetBusinessAllNum()
+	if err != nil {
+		b.Response(400, "查找不到设备")
+		return
+	}
+
+	b.Response(200, "获取业务列表成功", &totalNum)
 }
