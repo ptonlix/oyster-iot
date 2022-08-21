@@ -64,7 +64,11 @@ func (d *DeviceController) Add() {
 		d.Response(400, "输入参数错误")
 		return
 	}
-
+	userId, _, err := d.GetUserInfo()
+	if err != nil {
+		d.Response(500, "查询当前用户失败")
+		return
+	}
 	// 生成资产编码
 	uNum := uuid.GetUuid()
 	// 插入设备数据
@@ -76,6 +80,7 @@ func (d *DeviceController) Add() {
 		Publish:    deviceInfo.Publish,
 		Subscribe:  deviceInfo.Subscribe,
 		Type:       deviceInfo.Type,
+		UserId:     userId,
 	}
 	var deviceService services.DeviceService
 
@@ -190,7 +195,8 @@ func (d *DeviceController) List() {
 	pageparam := PageParam{}
 	d.Ctx.Input.Bind(&pageparam.Pagesize, "pagesize")
 	d.Ctx.Input.Bind(&pageparam.Pagenum, "pagenum")
-	logs.Debug("pagesize is %#v, pagenum is %#v", pageparam.Pagesize, pageparam.Pagenum)
+	d.Ctx.Input.Bind(&pageparam.Keyword, "keyword")
+	logs.Debug("pagesize is %#v, pagenum is %#v keyword is %#v", pageparam.Pagesize, pageparam.Pagenum, pageparam.Keyword)
 
 	// 校验输入参数是否合法
 	v := validation.Validation{}
@@ -208,11 +214,15 @@ func (d *DeviceController) List() {
 		d.Response(400, "输入参数错误")
 		return
 	}
-
+	userId, _, err := d.GetUserInfo()
+	if err != nil {
+		d.Response(500, "查询当前用户失败")
+		return
+	}
 	// 获取设备数据
 	var deviceService services.DeviceService
 
-	totalNum, totalPages, devices, err := deviceService.GetDevicesByPage(pageparam.Pagesize, pageparam.Pagenum)
+	totalNum, totalPages, devices, err := deviceService.GetDevicesByPageAndKey(userId, pageparam.Pagesize, pageparam.Pagenum, pageparam.Keyword)
 	if err != nil {
 		d.Response(400, "查找不到设备")
 		return
@@ -288,10 +298,16 @@ func (d *DeviceController) ListForNilBusiness() {
 		d.Response(400, "输入参数错误")
 		return
 	}
+	userId, _, err := d.GetUserInfo()
+	if err != nil {
+		d.Response(500, "查询当前用户失败")
+		return
+	}
+
 	// 获取设备数据
 	var deviceService services.DeviceService
 
-	totalNum, totalPages, devices, err := deviceService.GetDeviceByNilBusiness(pageparam.Pagesize, pageparam.Pagenum)
+	totalNum, totalPages, devices, err := deviceService.GetDeviceByNilBusiness(userId, pageparam.Pagesize, pageparam.Pagenum)
 	if err != nil {
 		d.Response(400, "查找不到设备")
 		return
@@ -379,4 +395,17 @@ func (d *DeviceController) ListForIndex() {
 	}
 
 	d.Response(200, "获取设备列表成功", devices)
+}
+
+func (d *DeviceController) ListForAllNum() {
+	// 获取设备数据
+	var deviceService services.DeviceService
+
+	devicesnum, err := deviceService.GetAllDevicesNum()
+	if err != nil {
+		d.Response(400, "查找不到设备")
+		return
+	}
+
+	d.Response(200, "获取设备列表数量成功", devicesnum)
 }

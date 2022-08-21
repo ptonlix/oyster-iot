@@ -5,6 +5,7 @@ import (
 	"log"
 	devmq "oyster-iot/devaccess/modules/mqtt"
 	"oyster-iot/services"
+	"oyster-iot/utils"
 
 	"github.com/beego/beego/v2/core/logs"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -35,6 +36,15 @@ func loadConfig() {
 
 func listenMQTT() {
 	var devDataS services.DevdataSevice
+	// 初始化InfluxDB配置
+	devDataS.Host = viper.GetString("influxDB.influxhost")
+	devDataS.Token = viper.GetString("influxDB.influxtoken")
+	devDataS.Org = viper.GetString("influxDB.influxorg")
+	devDataS.Bucket = viper.GetString("influxDB.influxbucket")
+
+	logs.Info("InfluxDB Config: Host: %s | Token: %s | Organization: %s | Bucket: %s|",
+		devDataS.Host, devDataS.Token, devDataS.Org, devDataS.Bucket)
+	devDataS.Online = utils.DetectInfluxDBOnline(devDataS.Host, devDataS.Token, devDataS.Org)
 	broker := viper.GetString("mqtt.broker")
 	clientid := viper.GetString("mqtt.clientid")
 	user := viper.GetString("mqtt.user")
@@ -42,4 +52,5 @@ func listenMQTT() {
 	devmq.Listen(broker, user, pass, clientid, func(m mqtt.Message) {
 		devDataS.MQTTMsgProc(m.Payload())
 	})
+
 }

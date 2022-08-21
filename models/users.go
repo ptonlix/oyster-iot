@@ -9,7 +9,7 @@ type Users struct {
 	Enabled   bool      `json:"enabled"`
 	Email     string    `json:"email"       orm:"size(255)"`
 	Username  string    `json:"username"    orm:"size(255);unique"`
-	Password  string    `json:"password"    orm:"size(255)"`
+	Password  string    `json:"-"           orm:"size(255)"`
 	Firstname string    `json:"first_name"  orm:"size(255)"`
 	Lastname  string    `json:"last_name"   orm:"size(255)"`
 	Mobile    string    `json:"mobile"      orm:"size(255)"`

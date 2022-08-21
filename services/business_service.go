@@ -15,6 +15,7 @@ func (b *BusinessService) Add(business *models.Business) (int64, error) {
 	id, err := mysql.Mydb.Insert(business)
 	if err != nil {
 		logs.Warn(err)
+		return id, err
 	}
 	logs.Info("Insert business successful! ID:", id)
 	return id, err
@@ -25,6 +26,7 @@ func (b *BusinessService) Update(business *models.Business) error {
 	id, err := mysql.Mydb.Update(business)
 	if err != nil {
 		logs.Warn(err)
+		return err
 	}
 	logs.Info("Update business successful! ID:", id)
 	return err
@@ -70,7 +72,7 @@ func (b *BusinessService) Delete(business *models.Business) (err error) {
 			return
 		}
 	}
-	id, err := mysql.Mydb.Delete(business)
+	id, err := to.Delete(business)
 	if err != nil {
 		logs.Warn(err)
 		return
@@ -80,7 +82,7 @@ func (b *BusinessService) Delete(business *models.Business) (err error) {
 }
 
 // 获取全部设备
-func (*BusinessService) GetBusinessByPage(pageSize, pageNum int) (int, int, []*models.Business, error) {
+func (*BusinessService) GetBusinessByPage(userId, pageSize, pageNum int) (int, int, []*models.Business, error) {
 
 	var business []*models.Business
 	qs := mysql.Mydb.QueryTable(&models.Business{})
@@ -88,12 +90,14 @@ func (*BusinessService) GetBusinessByPage(pageSize, pageNum int) (int, int, []*m
 	totalRecord, err := qs.Count()
 	if err != nil {
 		logs.Warn(err)
+		return -1, -1, nil, err
 
 	}
-	num, err := qs.Limit(pageSize, pageSize*(pageNum-1)).All(&business)
+	num, err := qs.Filter("user_id", userId).Limit(pageSize, pageSize*(pageNum-1)).All(&business)
 
 	if err != nil {
 		logs.Warn(err)
+		return -1, -1, nil, err
 	}
 
 	totalPageNum := (int(totalRecord) + pageSize - 1) / pageSize
@@ -101,4 +105,21 @@ func (*BusinessService) GetBusinessByPage(pageSize, pageNum int) (int, int, []*m
 	logs.Info("Get Business successful! Totalcount: %v TotalPages: %v Returned Rows Num: %#v", totalRecord, totalPageNum, num)
 
 	return int(totalRecord), totalPageNum, business, err
+}
+
+// 获取全部设备
+func (*BusinessService) GetBusinessAllNum() (int, error) {
+
+	qs := mysql.Mydb.QueryTable(&models.Business{})
+
+	totalRecord, err := qs.Count()
+	if err != nil {
+		logs.Warn(err)
+		return -1, err
+
+	}
+
+	logs.Info("Get Business successful! Totalcount: %v ", totalRecord)
+
+	return int(totalRecord), err
 }
