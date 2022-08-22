@@ -42,13 +42,13 @@ all: test build
 build:
 	$(GOBUILD) -ldflags $(VERSIONINFO) -o $(BINARY_NAME) -v
 test:
-	$(GOTEST) -v ./...
+	$(GOTEST) -v
 clean:
 	$(GOCLEAN)
 	rm -f $(BINARY_NAME)
 	rm -f $(BINARY_UNIX)
 run:
-	$(GOBUILD) -o $(BINARY_NAME) -v ./...
+	$(GOBUILD) -o $(BINARY_NAME) -v 
 	./$(BINARY_NAME)
 beego:
 	bee run
