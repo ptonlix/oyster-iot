@@ -1,7 +1,23 @@
 # Oyster-IoT
 English | [简体中文](./README-zh.md)
+<p>
+	<p align="center">
+		<img src="https://img.gejiba.com/images/375278c7eb92bab1d7ba09f27e2fe8b4.png">
+	</p>
+	<p align="center">
+		<font size=6 face="宋体">打造海洋养殖专业物联平台</font>
+	<p>
+</p>
+<p align="center">
+<img alt="Go" src="https://img.shields.io/badge/Go-1.7%2B-blue">
+<img alt="Mysql" src="https://img.shields.io/badge/Mysql-5.7%2B-brightgreen">
+<img alt="Redis" src="https://img.shields.io/badge/Redis-6.2%2B-yellowgreen">
+<img alt="influxDB" src="https://img.shields.io/badge/influxDB-2.3%2B-orange">
+<img alt="EMQX" src="https://img.shields.io/badge/EMQX-4.4+%2B-yellow">
+<img alt="license" src="https://img.shields.io/badge/license-GPL-lightgrey">
+</p>
 
-> Oyster-IoT: 采用Beego框架，结合Mysql+Redis+influxDB+EMQX开发的物联网管理平台。当前支持单机部署，传感器设备使用MQTT交互。
+> Oyster-IoT: 采用Beego框架，结合Mysql+Redis+influxDB+EMQX开发的物联网管理平台。当前支持单机部署，硬件探测设备使用MQTT交互。
 
 **演示平台:** https://oyster-iot.cloud/  
 **微信公众号:** 扫描添加，联系获取体验账号
