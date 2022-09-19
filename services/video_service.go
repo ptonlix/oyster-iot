@@ -2,10 +2,13 @@ package services
 
 import (
 	"errors"
+	"strconv"
 
 	"github.com/beego/beego/v2/core/logs"
 	"github.com/qiniu/go-sdk/v7/auth"
 	"github.com/qiniu/go-sdk/v7/qvs"
+
+	calendar "oyster-iot/utils"
 )
 
 // 视频监控SDK接口
@@ -36,12 +39,14 @@ type VideoSDK interface {
 	GetVideoDeviceRecordList(streamId string, start, end int, marker string, line int, format string) (*VideoRecordList, error)
 	// 获取空间信息
 	GetVideoSpaceInfo(nsId string) (interface{}, error)
-	// 查询视频流信息
+	// 查询视频流日历
 	GetVideoStreamInfo(streamId string) (interface{}, error)
 	// 开始录制
 	StartVideoRecord(streamId string) error
 	// 停止录制
 	StopVideoRecord(streamId string) error
+	// 获取录制日历
+	GetVideoDeviceRecordCalendar(streamId, year, month string) (map[string]bool, error)
 }
 
 type ChannelInfo struct {
@@ -112,7 +117,7 @@ func (q *QiniuSDK) Create() {
 }
 
 func (q *QiniuSDK) GetVideoDevicesList(offset, line int, prefix, state string, qType int) (*[]VideoDevice, int64, error) {
-	logs.Info(offset, line)
+	logs.Debug(offset, line)
 	devs, sum, err := q.manager.ListDevice(q.NsId, offset, line, prefix, state, qType)
 	if err != nil {
 		logs.Error(err)
@@ -138,6 +143,14 @@ func (q *QiniuSDK) GetVideoDevicesList(offset, line int, prefix, state string, q
 			UpdatedAt:       device.UpdatedAt,
 			LastRegisterAt:  device.LastRegisterAt,
 			LastKeepaliveAt: device.LastKeepaliveAt,
+		}
+		if device.Type == 2 {
+			chanelInfo, err := q.manager.ListChannels(q.NsId, device.GBId, "")
+			if err != nil {
+				logs.Error(err)
+				return nil, 0, err
+			}
+			videoDev.ChannelInfo = chanelInfo
 		}
 		videoDevs = append(videoDevs, videoDev)
 	}
@@ -208,6 +221,29 @@ func (q *QiniuSDK) GetVideoDeviceRecordList(streamId string, start, end int, mar
 	}
 
 	return returnData, nil
+}
+
+// 获取录制日历
+func (q *QiniuSDK) GetVideoDeviceRecordCalendar(streamId, year, month string) (map[string]bool, error) {
+	dayMap, err := calendar.GetMonthDayTimeInterval(year, month)
+	if err != nil {
+		logs.Error("err=%\n", err.Error())
+		return nil, err
+	}
+	logs.Debug("dayMap :", dayMap)
+	result := make(map[string]bool)
+	// 判断每天回放视频是否存在
+	for i := 0; i < len(dayMap); i++ {
+		for starttime, endtime := range dayMap[i] {
+			if list, err := q.GetVideoDeviceRecordList(streamId, int(starttime), int(endtime), "", 10, ""); err != nil || len(*((*list).List.(*[]qvs.RecordHistory))) <= 0 {
+				// 数据为空
+				result[strconv.Itoa(i+1)] = false
+			} else if err == nil && len(*((*list).List.(*[]qvs.RecordHistory))) > 0 {
+				result[strconv.Itoa(i+1)] = true
+			}
+		}
+	}
+	return result, nil
 }
 
 func (q *QiniuSDK) GetVideoSpaceInfo(nsId string) (interface{}, error) {

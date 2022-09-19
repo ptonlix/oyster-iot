@@ -126,7 +126,7 @@ func (*VideoDbService) JudgeUser(userId int) bool {
 	videoSpace := &models.VideoSpace{
 		UserId: userId,
 	}
-	err := mysql.Mydb.Read(videoSpace)
+	err := mysql.Mydb.Read(videoSpace, "UserId")
 	if err == orm.ErrNoRows {
 		logs.Info("Not Found VideoSpace")
 		return true
@@ -154,7 +154,7 @@ func (*VideoDbService) GetSpacesByPageAndKey(pageSize, pageNum int, keyword stri
 	}
 	totalPageNum := (int(totalRecord) + pageSize - 1) / pageSize
 
-	num, err := mysql.Mydb.Raw("SELECT * FROM video WHERE concat(ifnull(username,''), ifnull(space_name,'')) like ? LIMIT ? OFFSET  ?", "%"+keyword+"%", pageSize, pageSize*(pageNum-1)).QueryRows(&videoSpace)
+	num, err := mysql.Mydb.Raw("SELECT * FROM video_space WHERE concat(ifnull(username,''), ifnull(space_name,'')) like ? LIMIT ? OFFSET  ?", "%"+keyword+"%", pageSize, pageSize*(pageNum-1)).QueryRows(&videoSpace)
 
 	if err == orm.ErrNoRows {
 		logs.Warn("Get Keyword:%#v  ErrNoRows!", keyword)
@@ -166,4 +166,19 @@ func (*VideoDbService) GetSpacesByPageAndKey(pageSize, pageNum int, keyword stri
 
 	logs.Info("Get Devices successful! Totalcount: %v TotalPages: %v Returned Rows Num: %#v", totalRecord, totalPageNum, num)
 	return int(totalRecord), totalPageNum, videoSpace, err
+}
+
+// 获取视频空间和用户的聚合数据
+func (*VideoDbService) GetSpacesAndUser() ([]*models.VideoSpaceAndUser, error) {
+	videoSpaceUser := []*models.VideoSpaceAndUser{}
+	totalRecord, err := mysql.Mydb.Raw("SELECT space_id, GROUP_CONCAT(DISTINCT space_name) AS space_name, GROUP_CONCAT(username) AS usernames FROM video_space GROUP BY space_id").QueryRows(&videoSpaceUser)
+	if err == orm.ErrNoRows {
+		logs.Warn("GetSpacesAndUser ErrNoRows!")
+		return nil, err
+	} else if err != nil {
+		logs.Warn("GetSpacesAndUser  Failed! err:%#v", err)
+		return nil, err
+	}
+	logs.Debug("GetSpacesAndUser Total Record is %d", totalRecord)
+	return videoSpaceUser, nil
 }

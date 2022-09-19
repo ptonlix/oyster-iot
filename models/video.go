@@ -34,3 +34,9 @@ type VideoDevice struct {
 	Password     string `json:"password"       orm:"size(64);description(摄像头登录密码)"`
 	Desc         string `json:"desc"           orm:"type(text);description(设备描述)"`
 }
+
+type VideoSpaceAndUser struct {
+	SpaceId   string `json:"space_id"              orm:"index;description(空间ID)"`
+	SpaceName string `json:"space_name"            orm:"description(空间名称)"`
+	Usernames string `json:"usernames"              orm:"null;description(用户名称)"`
+}

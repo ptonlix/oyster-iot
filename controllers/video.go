@@ -76,6 +76,13 @@ type VideoDeviceList struct {
 	DeviceList *[]*models.VideoSpace `json:"list"`
 }
 
+type VideoStreamRecordCalendar struct {
+	NsId     string `json:"ns_id"      valid:"Required;MaxSize(100)"`
+	StreamId string `json:"stream_id"  valid:"Required;MaxSize(100)"`
+	Year     string `json:"year"       valid:"Required;"`
+	Month    string `json:"month       valid:"Required;"`
+}
+
 func (vc *VideoController) AddSpace() {
 	addSpaceParam := AddSpaceParam{}
 	err := json.Unmarshal(vc.Ctx.Input.RequestBody, &addSpaceParam)
@@ -141,7 +148,7 @@ func (vc *VideoController) EditSpace() {
 		vc.Response(400, "输入参数错误")
 		return
 	}
-
+	logs.Debug(editSpaceParam)
 	// 查询当前用户是否已绑定空间,目前一个用户一个空间
 	var videoDb services.VideoDbService
 	if editSpaceParam.UserId != 0 {
@@ -238,7 +245,7 @@ func (vc *VideoController) ListSpace() {
 
 	totalNum, totalPages, videoSpace, err := videoDb.GetSpacesByPageAndKey(pageparam.Pagesize, pageparam.Pagenum, pageparam.Keyword)
 	if err != nil {
-		vc.Response(400, "查找不到监控设备")
+		vc.Response(400, "查找不到监控视频空间")
 		return
 	}
 
@@ -247,8 +254,22 @@ func (vc *VideoController) ListSpace() {
 		TotalPages: totalPages,
 		DeviceList: &videoSpace,
 	}
-	vc.Response(200, "获取监控设备列表成功", retList)
+	vc.Response(200, "获取监控视频空间列表成功", retList)
 
+}
+
+// 查询空间和用户名
+func (vc *VideoController) ListSpaceAndUser() {
+	// 获取设备数据
+	var videoDb services.VideoDbService
+
+	videoSpaceUsers, err := videoDb.GetSpacesAndUser()
+	if err != nil {
+		vc.Response(400, "查找不到监控设备")
+		return
+	}
+
+	vc.Response(200, "获取监控设备列表成功", videoSpaceUsers)
 }
 
 /*下面为小程序提供的API接口*/
@@ -562,4 +583,45 @@ func (vc *VideoController) StopVideoRecord() {
 		return
 	}
 	vc.Response(200, "停止视频录制成功")
+}
+
+func (vc *VideoController) GetRecordCalendar() {
+	vSRecordCalendar := VideoStreamRecordCalendar{}
+	vc.Ctx.Input.Bind(&vSRecordCalendar.NsId, "ns_id")
+	vc.Ctx.Input.Bind(&vSRecordCalendar.StreamId, "stream_id")
+	vc.Ctx.Input.Bind(&vSRecordCalendar.Year, "year")
+	vc.Ctx.Input.Bind(&vSRecordCalendar.Month, "month")
+
+	// 校验输入参数是否合法
+	v := validation.Validation{}
+	b, err := v.Valid(&vSRecordCalendar)
+	if err != nil {
+		// handler error
+		vc.Response(500, "系统内部错误")
+		return
+	}
+	if !b {
+		// validation does not pass
+		for _, err := range v.Errors {
+			logs.Warn(err.Key, err.Message)
+		}
+		vc.Response(400, "输入参数错误")
+		return
+	}
+
+	// 创建视频监控服务
+	videoS, err := services.NewVideoService("QINIU", constants.QiniuAK, constants.QiniuSK, vSRecordCalendar.NsId) // 3nm4x17o751vq
+	if err != nil {
+		logs.Error(err)
+		vc.Response(500, "视频监控服务错误,请联系管理员")
+		return
+	}
+	videoS.SDK.Create()
+	daysMap, err := videoS.SDK.GetVideoDeviceRecordCalendar(vSRecordCalendar.StreamId, vSRecordCalendar.Year, vSRecordCalendar.Month)
+	if err != nil {
+		logs.Error(err)
+		vc.Response(500, "视频监控服务错误,请联系管理员")
+		return
+	}
+	vc.Response(200, "获取视频回放日历成功", daysMap)
 }
