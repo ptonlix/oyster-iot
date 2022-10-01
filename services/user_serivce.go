@@ -11,7 +11,7 @@ import (
 type UserService struct {
 }
 
-// 通过通过用户名 获取用户信息
+// 通过用户名 获取用户信息
 func (*UserService) GetUserByUsername(username string) (*models.Users, error) {
 	user := models.Users{Username: username}
 
@@ -26,7 +26,7 @@ func (*UserService) GetUserByUsername(username string) (*models.Users, error) {
 	return &user, err
 }
 
-// 通过通过用户名 获取用户信息
+// 通过用户ID 获取用户信息
 func (*UserService) GetUserById(id int) (*models.Users, error) {
 	user := models.Users{Id: id}
 

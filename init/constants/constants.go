@@ -23,7 +23,14 @@ type InfluxConfig struct {
 	Online bool
 }
 
+type WxConfig struct {
+	Appid     string // 小程序配置文件
+	AppSecret string
+	ApiHost   string
+}
+
 var InfluxConf InfluxConfig
+var WxConf WxConfig
 
 func init() {
 	QiniuAK, _ = beego.AppConfig.String("qiniuak")
@@ -40,4 +47,10 @@ func init() {
 		InfluxConf.Host, InfluxConf.Token, InfluxConf.Org, InfluxConf.Bucket)
 
 	InfluxConf.Online = utils.DetectInfluxDBOnline(InfluxConf.Host, InfluxConf.Token, InfluxConf.Org)
+
+	// 获取微信配置
+	WxConf.Appid, _ = beego.AppConfig.String("wxappid")
+	WxConf.AppSecret, _ = beego.AppConfig.String("wxappsecret")
+	WxConf.ApiHost, _ = beego.AppConfig.String("wxapihost")
+
 }

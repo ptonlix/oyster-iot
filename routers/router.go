@@ -96,6 +96,12 @@ func init() {
 				web.NSRouter("/getbyuser", &controllers.VideoController{}, "*:GetSpaceByUser"),
 			),
 		),
+
+		// 第三方接入
+		web.NSNamespace("thirdaccess/",
+			web.NSRouter("/wxlogin", &controllers.WxAccessController{}, "*:WxLogin"),
+			web.NSRouter("/wxgetphone", &controllers.WxAccessController{}, "*:GetPhoneNumber"),
+		),
 	)
 	web.AddNamespace(api)
 }
@@ -104,10 +110,12 @@ func init() {
 func AuthMiddle() {
 	//不需要验证的url
 	noLogin := map[string]interface{}{
-		"api/auth/login":       0,
-		"api/auth/refresh":     0,
-		"api/auth/register":    1,
-		"api/auth/loginmanage": 0,
+		"api/auth/login":             0,
+		"api/auth/refresh":           0,
+		"api/auth/register":          1,
+		"api/auth/loginmanage":       0,
+		"api/thirdaccess/wxlogin":    0,
+		"api/thirdaccess/wxgetphone": 0,
 	}
 	var filterLogin = func(ctx *context.Context) {
 		url := strings.TrimLeft(ctx.Input.URL(), "/")

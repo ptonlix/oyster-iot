@@ -22,7 +22,7 @@ type TempOne struct {
 	Time string  `json:"ts"`
 }
 type TempMsg struct {
-	Temperature float32 `json:temperature`
+	Temperature float32 `json:"temperature"`
 }
 
 type DevTempDay struct {

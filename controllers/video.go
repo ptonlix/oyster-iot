@@ -80,7 +80,7 @@ type VideoStreamRecordCalendar struct {
 	NsId     string `json:"ns_id"      valid:"Required;MaxSize(100)"`
 	StreamId string `json:"stream_id"  valid:"Required;MaxSize(100)"`
 	Year     string `json:"year"       valid:"Required;"`
-	Month    string `json:"month       valid:"Required;"`
+	Month    string `json:"month"       valid:"Required;"`
 }
 
 func (vc *VideoController) AddSpace() {
