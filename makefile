@@ -11,7 +11,7 @@ DEVCONFPATH=./devaccess/config.ini
 FRONTENDSOURCE=static
 
 APP_NAME=${BINARY_NAME}
-APP_VERSION= 0.0.8v
+APP_VERSION= 0.0.9v
 BUILD_VERSION=$(shell git log -1 --oneline)
 BUILD_TIME=$(shell date )
 GIT_REVISION=$(shell git rev-parse --short HEAD)
